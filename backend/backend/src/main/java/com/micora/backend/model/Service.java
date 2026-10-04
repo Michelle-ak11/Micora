@@ -34,7 +34,7 @@ public class Service {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // ---- Getters and setters (Spring needs these to read/write each field) ----
+    // ---- Getters and setters 
 
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }

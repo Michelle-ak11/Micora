@@ -22,7 +22,6 @@ public class AuthController {
         User user = new User();
         user.setName(request.name());
         user.setEmail(request.email());
-        user.setPhone(request.phone());
         user.setPasswordHash(passwordEncoder.encode(request.password()));  // hash it here
         user.setRole(User.Role.CUSTOMER);  // new signups are always customers, not admins
         user.setCreatedAt(java.time.LocalDateTime.now());
@@ -32,5 +31,5 @@ public class AuthController {
     }
 
     // A small "record" — a lightweight class just to represent the incoming JSON shape
-    public record RegisterRequest(String name, String email, String phone, String password) {}
+    public record RegisterRequest(String name, String email, String password) {}
 }
