@@ -10,14 +10,15 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
-  background: #f5f5f5;
+
 }
 
 
 
 /* Card */
 .login-card {
-  background: #ffffff;
+ 
+  border: 1px solid #6B2C5A;;
   width: 100%;
   max-width: 420px;
   padding: 48px 40px;
