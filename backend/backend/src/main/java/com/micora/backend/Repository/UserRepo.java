@@ -7,7 +7,7 @@ import java.util.Optional;
 
 public interface UserRepo extends JpaRepository<User, Long> {
 
-    // Custom query method — Spring auto-generates the implementation
-    // just from the method name itself
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByUsernameOrEmail(String username, String email);
 }

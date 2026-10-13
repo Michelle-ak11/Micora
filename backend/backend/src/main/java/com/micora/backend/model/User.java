@@ -1,5 +1,5 @@
 package com.micora.backend.model;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -11,17 +11,20 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name;
+    @Column(unique = true)
+    private String username;
 
-    @Column(unique = true)              // matches the UNIQUE constraint on email in our schema
+    @Column(unique = true)
     private String email;
 
-    @Column(name = "password_hash")     // maps Java's passwordHash -> SQL's password_hash
+
+   @JsonIgnore
+    @Column(name = "password_hash")
     private String passwordHash;
 
     private String phone;
 
-    @Enumerated(EnumType.STRING)        // store the enum as text ("CUSTOMER"/"ADMIN"), not a number
+    @Enumerated(EnumType.STRING)
     private Role role;
 
     @Column(name = "created_at", updatable = false)
@@ -30,19 +33,15 @@ public class User {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    // An "enum" = a fixed, limited set of allowed values.
-    // This matches the CHECK (role IN ('CUSTOMER','ADMIN')) constraint in our SQL schema.
     public enum Role {
         CUSTOMER, ADMIN
     }
 
-    // ---- Getters and setters ----
-
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
 
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
+    public String getUsername() { return username; }
+    public void setUsername(String username) { this.username = username; }
 
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
