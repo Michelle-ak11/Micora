@@ -27,6 +27,10 @@ public class OrderController {
     public List<Order> getAllOrders() {
         return orderRepo.findAll();
     }
+    @GetMapping("/customer/{customerId}")
+public List<Order> getOrdersByCustomer(@PathVariable Long customerId) {
+    return orderRepo.findByCustomerId(customerId);
+}
         @PostMapping
     public Order createOrder(@RequestBody CreateOrderRequest request) {
         User customer = userRepo.findById(request.customerId())
@@ -51,6 +55,30 @@ public class OrderController {
 
         return orderRepo.save(order);
     }
+
+    @PatchMapping("/{id}/status")
+public Order updateStatus(@PathVariable Long id, @RequestBody UpdateStatusRequest request) {
+    Order order = orderRepo.findById(id)
+        .orElseThrow(() -> new RuntimeException("Order not found"));
+
+    Order.Status current = order.getStatus();
+    Order.Status next = request.status();
+
+    boolean allowed =
+        (current == Order.Status.PENDING && (next == Order.Status.PRINTING || next == Order.Status.CANCELLED)) ||
+        (current == Order.Status.PRINTING && next == Order.Status.READY) ||
+        (current == Order.Status.READY && next == Order.Status.DELIVERED);
+
+    if (!allowed) {
+        throw new RuntimeException("Cannot change status from " + current + " to " + next);
+    }
+
+    order.setStatus(next);
+    order.setUpdatedAt(LocalDateTime.now());
+    return orderRepo.save(order);
+}
+
+public record UpdateStatusRequest(Order.Status status) {}
 
      public record CreateOrderRequest(
         Long customerId,

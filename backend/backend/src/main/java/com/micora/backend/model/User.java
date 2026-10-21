@@ -22,7 +22,7 @@ public class User {
     @Column(name = "password_hash")
     private String passwordHash;
 
-    private String phone;
+    // private String phone;
 
     @Enumerated(EnumType.STRING)
     private Role role;
@@ -49,8 +49,8 @@ public class User {
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
 
-    public String getPhone() { return phone; }
-    public void setPhone(String phone) { this.phone = phone; }
+    // public String getPhone() { return phone; }
+    // public void setPhone(String phone) { this.phone = phone; }
 
     public Role getRole() { return role; }
     public void setRole(Role role) { this.role = role; }
