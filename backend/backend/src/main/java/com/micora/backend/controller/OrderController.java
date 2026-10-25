@@ -10,6 +10,10 @@ import com.micora.backend.model.User;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.time.LocalDateTime;
+import org.springframework.security.core.Authentication;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
+
 
 @RestController
 @RequestMapping("/api/orders")
@@ -31,10 +35,21 @@ public class OrderController {
 public List<Order> getOrdersByCustomer(@PathVariable Long customerId) {
     return orderRepo.findByCustomerId(customerId);
 }
+
+@GetMapping("/me")
+public List<Order> getMyOrders(Authentication authentication) {
+    Long userId = Long.parseLong(authentication.getName());
+    return orderRepo.findByCustomerId(userId);
+}
+
+
         @PostMapping
-    public Order createOrder(@RequestBody CreateOrderRequest request) {
-        User customer = userRepo.findById(request.customerId())
-            .orElseThrow(() -> new RuntimeException("Customer not found"));
+        public Order createOrder(@RequestBody CreateOrderRequest request, Authentication authentication) {
+    Long userId = Long.parseLong(authentication.getName());
+
+    User customer = userRepo.findById(userId)
+        .orElseThrow(() -> new RuntimeException("Customer not found"));
+
 
               Service service = serviceRepo.findById(request.serviceId())
             .orElseThrow(() -> new RuntimeException("Service not found"));
@@ -59,7 +74,7 @@ public List<Order> getOrdersByCustomer(@PathVariable Long customerId) {
     @PatchMapping("/{id}/status")
 public Order updateStatus(@PathVariable Long id, @RequestBody UpdateStatusRequest request) {
     Order order = orderRepo.findById(id)
-        .orElseThrow(() -> new RuntimeException("Order not found"));
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Order not found"));
 
     Order.Status current = order.getStatus();
     Order.Status next = request.status();
@@ -69,9 +84,10 @@ public Order updateStatus(@PathVariable Long id, @RequestBody UpdateStatusReques
         (current == Order.Status.PRINTING && next == Order.Status.READY) ||
         (current == Order.Status.READY && next == Order.Status.DELIVERED);
 
-    if (!allowed) {
-        throw new RuntimeException("Cannot change status from " + current + " to " + next);
-    }
+  if (!allowed) {
+    throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+        "Cannot change status from " + current + " to " + next);
+}
 
     order.setStatus(next);
     order.setUpdatedAt(LocalDateTime.now());
@@ -81,7 +97,7 @@ public Order updateStatus(@PathVariable Long id, @RequestBody UpdateStatusReques
 public record UpdateStatusRequest(Order.Status status) {}
 
      public record CreateOrderRequest(
-        Long customerId,
+    
         Long serviceId,
         Integer quantity,
         String designFileUrl
