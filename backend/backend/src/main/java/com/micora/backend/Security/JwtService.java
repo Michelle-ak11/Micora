@@ -15,9 +15,8 @@ import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 @Component
-public class JwtService {
-
-    private static final long EXPIRY_MS = 24L * 60 * 60 * 1000; // 24 hours
+public class JwtService {private static final long EXPIRY_MS = 7L * 24 * 60 * 60 * 1000; // 7 days
+; 
 
     private final SecretKey key;
 

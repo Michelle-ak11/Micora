@@ -27,14 +27,19 @@ public class SecurityConfig {
             .csrf(csrf -> csrf.disable())
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .exceptionHandling(e -> e.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
+
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/services/**", "/api/auth/**", "/error").permitAll()
-                .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/api/orders/customer/**").hasRole("ADMIN")
-                .requestMatchers("/api/orders/**").authenticated()
-                .anyRequest().authenticated()
-            )
+    .requestMatchers(HttpMethod.GET, "/api/services").permitAll()
+    .requestMatchers("/api/services/**").hasRole("ADMIN")
+    .requestMatchers("/api/auth/**", "/error").permitAll()
+    .requestMatchers("/api/users/me/**").authenticated()
+    .requestMatchers("/api/users/**").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.PATCH, "/api/orders/*/status").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
+    .requestMatchers(HttpMethod.GET, "/api/orders/customer/**").hasRole("ADMIN")
+    .requestMatchers("/api/orders/**").authenticated()
+    .anyRequest().authenticated()
+)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

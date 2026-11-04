@@ -67,32 +67,37 @@ public class PaymentController {
         invoice.setIssuedAt(now);
         invoiceRepo.save(invoice);
 
-        return new Receipt(
+       return new Receipt(
             invoice.getInvoiceNumber(),
-            invoice.getIssuedAt(),
             order.getCustomer().getUsername(),
+            order.getCustomer().getEmail(),
             order.getId(),
             order.getService().getName(),
             order.getQuantity(),
             payment.getAmount(),
-            payment.getMethod(),
+            order.getQuotedPrice().subtract(payment.getAmount()),
+            payment.getPaidAt(),
+            payment.getTransactionRef(),
             payment.getStatus().name(),
-            payment.getTransactionRef()
+            "Payment successful"
         );
+    
     }
 
     public record PayRequest(Long orderId) {}
-
-    public record Receipt(
-        String invoiceNumber,
-        LocalDateTime issuedAt,
-        String customer,
-        Long orderId,
-        String service,
-        Integer quantity,
-        BigDecimal amountPaid,
-        String method,
-        String status,
-        String transactionRef
-    ) {}
+public record Receipt(
+    String invoiceNumber,
+    String name,
+    String email,
+    Long orderId,
+    String service,
+    Integer quantity,
+    BigDecimal amountPaid,
+    BigDecimal balance,
+    LocalDateTime paymentDate,
+    String transactionRef,
+    String status,
+    String message
+) {}
+  
 }

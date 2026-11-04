@@ -3,6 +3,8 @@
 
 package com.micora.backend.Security;
 
+import com.micora.backend.Repository.UserRepo;
+import com.micora.backend.model.User;
 import io.jsonwebtoken.Claims;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,9 +23,11 @@ import java.util.List;
 public class JwtAuthFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
+    private final UserRepo userRepo;
 
-    public JwtAuthFilter(JwtService jwtService) {
+    public JwtAuthFilter(JwtService jwtService, UserRepo userRepo) {
         this.jwtService = jwtService;
+        this.userRepo = userRepo;
     }
 
     @Override
@@ -35,13 +39,17 @@ public class JwtAuthFilter extends OncePerRequestFilter {
         if (header != null && header.startsWith("Bearer ")) {
             try {
                 Claims claims = jwtService.parseToken(header.substring(7));
-                String role = claims.get("role", String.class);
+                Long userId = Long.parseLong(claims.getSubject());
 
-                UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                    claims.getSubject(), null,
-                    List.of(new SimpleGrantedAuthority("ROLE_" + role)));
+                User user = userRepo.findById(userId).orElse(null);
 
-                SecurityContextHolder.getContext().setAuthentication(auth);
+                if (user != null && Boolean.TRUE.equals(user.getActive())) {
+                    UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
+                        claims.getSubject(), null,
+                        List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name())));
+
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             } catch (Exception e) {
                 // bad or expired token: leave the request unauthenticated
             }

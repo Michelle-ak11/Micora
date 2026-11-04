@@ -47,6 +47,13 @@ public class AuthController {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
+        if (!Boolean.TRUE.equals(user.getActive())) {
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account is deactivated");
+}
+
+
+
+
         String token = jwtService.generateToken(user);
 
         return new LoginResponse(token, user.getId(), user.getUsername(), user.getEmail(), user.getRole().name());
