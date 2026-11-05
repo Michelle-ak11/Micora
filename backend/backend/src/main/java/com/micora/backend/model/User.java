@@ -35,6 +35,11 @@ public class User {
 
     private Boolean active = true;
 
+    @Column(name = "email_verified")
+    private Boolean emailVerified = false;
+
+
+
     public enum Role {
         CUSTOMER, ADMIN
     }
@@ -65,4 +70,7 @@ public class User {
 
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+
+    public Boolean getEmailVerified() { return emailVerified; }
+    public void setEmailVerified(Boolean emailVerified) { this.emailVerified = emailVerified; }
 }

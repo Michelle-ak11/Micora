@@ -1,9 +1,11 @@
 package com.micora.backend.controller;
 
+import com.micora.backend.Email.CodeService;
 import com.micora.backend.Repository.OrderRepo;
 import com.micora.backend.Repository.UserRepo;
 import com.micora.backend.model.Order;
 import com.micora.backend.model.User;
+import com.micora.backend.model.VerificationCode;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -12,6 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,11 +23,14 @@ public class UserController {
     private final UserRepo userRepo;
     private final OrderRepo orderRepo;
     private final PasswordEncoder passwordEncoder;
+    private final CodeService codeService;
 
-    public UserController(UserRepo userRepo, OrderRepo orderRepo, PasswordEncoder passwordEncoder) {
+    public UserController(UserRepo userRepo, OrderRepo orderRepo,
+                          PasswordEncoder passwordEncoder, CodeService codeService) {
         this.userRepo = userRepo;
         this.orderRepo = orderRepo;
         this.passwordEncoder = passwordEncoder;
+        this.codeService = codeService;
     }
 
     // Admin: list all users
@@ -60,34 +66,57 @@ public class UserController {
         return toSummary(userRepo.save(user));
     }
 
-    // Customer: close my own account (password confirmation)
-    @PatchMapping("/me/deactivate")
-    public UserSummary closeMyAccount(@RequestBody CloseAccountRequest request, Authentication authentication) {
-        Long userId = Long.parseLong(authentication.getName());
-
-        User user = userRepo.findById(userId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+    // Customer: email me a code to close my account
+    @PostMapping("/me/close-account/send-code")
+    public Map<String, String> sendCloseAccountCode(Authentication authentication) {
+        User user = currentUser(authentication);
 
         if (user.getRole() == User.Role.ADMIN) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Admin accounts can't be closed here");
+        }
+
+        codeService.sendCode(user, VerificationCode.Purpose.CLOSE_ACCOUNT);
+        return Map.of("message", "We've sent a code to your email");
+    }
+
+    // Customer: close my own account (password OR emailed code)
+    @PatchMapping("/me/deactivate")
+    public UserSummary closeMyAccount(@RequestBody CloseAccountRequest request, Authentication authentication) {
+        User user = currentUser(authentication);
+
+        if (user.getRole() == User.Role.ADMIN) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Admin accounts can't be closed here");
+        }
+
+        boolean inProgress = orderRepo.findByCustomerId(user.getId()).stream()
+            .anyMatch(o -> o.getStatus() == Order.Status.PRINTING || o.getStatus() == Order.Status.READY);
+        if (inProgress) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have orders in progress");
         }
 
         boolean passwordOk = request.password() != null
             && passwordEncoder.matches(request.password(), user.getPasswordHash());
 
         if (!passwordOk) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect password");
-        }
-
-        boolean inProgress = orderRepo.findByCustomerId(userId).stream()
-            .anyMatch(o -> o.getStatus() == Order.Status.PRINTING || o.getStatus() == Order.Status.READY);
-        if (inProgress) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "You have orders in progress");
+            if (request.code() != null) {
+                codeService.verifyCode(user, VerificationCode.Purpose.CLOSE_ACCOUNT, request.code());
+            } else if (request.password() != null) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Incorrect password");
+            } else {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Confirm with your password or an emailed code");
+            }
         }
 
         user.setActive(false);
         user.setUpdatedAt(LocalDateTime.now());
         return toSummary(userRepo.save(user));
+    }
+
+    private User currentUser(Authentication authentication) {
+        Long userId = Long.parseLong(authentication.getName());
+        return userRepo.findById(userId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
     }
 
     private UserSummary toSummary(User u) {
@@ -102,5 +131,5 @@ public class UserController {
 
     public record ActiveRequest(Boolean active) {}
 
-    public record CloseAccountRequest(String password) {}
+    public record CloseAccountRequest(String password, String code) {}
 }
