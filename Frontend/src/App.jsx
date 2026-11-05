@@ -1,6 +1,15 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import './App.css'
 import Registration from './Pages/Registration'
+import EmailVerification from './Pages/EmailVerification'
+import Login from './Pages/LoginPage'
+import Dashboard from './Pages/Dashboard'
+import Services from './Pages/Services'
+import PlaceOrder from './Pages/PlaceOrder'
+import Payment from './Pages/Payement'
+import Receipt from './Pages/Receipt'
+
+
 
 function LandingPage() {
   return (
@@ -47,9 +56,15 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
-        <Route path="/login" element={<Placeholder title="Login" />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Registration />} />
-        <Route path="/services" element={<Placeholder title="Services" />} />
+        
+        <Route path="/verify-email" element={<EmailVerification />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/services" element={<Services />} />
+        <Route path="/place-order" element={<PlaceOrder />} />
+        <Route path="/payment" element={<Payment />} />
+        <Route path="/receipt" element={<Receipt />} />
       </Routes>
     </BrowserRouter>
   )

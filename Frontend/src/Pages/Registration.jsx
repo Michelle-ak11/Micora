@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
-import api from '../Services/api'
+import api from '../services/api'
+import { useNavigate } from 'react-router-dom'
 
 function Registration() {
   const [showPassword, setShowPassword] = useState(false)
@@ -11,6 +12,7 @@ function Registration() {
   })
   const [message, setMessage] = useState('')
   const [loading, setLoading] = useState(false)
+    const navigate = useNavigate()
 
   const handleChange = (e) => {
     setFormData({
@@ -26,9 +28,8 @@ function Registration() {
 
     try {
       const response = await api.post('/api/auth/register', formData)
-      setMessage(
-        response.data.message || 'Verification code sent to your email.'
-      )
+      navigate('/verify-email', { state: { email: formData.email } })
+      
     } catch (error) {
       setMessage(
         error.response?.data?.message ||
