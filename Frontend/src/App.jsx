@@ -8,6 +8,12 @@ import Services from './Pages/Services'
 import PlaceOrder from './Pages/PlaceOrder'
 import Payment from './Pages/Payement'
 import Receipt from './Pages/Receipt'
+import TrackOrder from './Pages/TrackOrder'
+import AdminDashboard from './Pages/AdminDashboard'
+import AdminOrders from './Pages/AdminOrders'
+import AdminServices from './Pages/AdminServices'
+import AdminCustomers from './Pages/AdminCustomers'
+import AdminInvoices from './Pages/AdminInvoices'
 
 
 
@@ -51,6 +57,10 @@ function Placeholder({ title }) {
   return <h1>{title} — Coming Soon</h1>
 }
 
+function AdminPlaceholder() {
+  return <h1>Admin Dashboard — Coming Soon</h1>
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -65,6 +75,14 @@ function App() {
         <Route path="/place-order" element={<PlaceOrder />} />
         <Route path="/payment" element={<Payment />} />
         <Route path="/receipt" element={<Receipt />} />
+        <Route path="/track-order" element={<TrackOrder />} />
+        <Route path="/admin" element={<AdminDashboard />} />
+        <Route path="/admin/orders" element={<AdminOrders />} />
+        <Route path="/admin/services" element={<AdminServices />} />
+        <Route path="/admin/customers" element={<AdminCustomers />} />
+        <Route path="/admin/invoices" element={<AdminInvoices />} />
+        
+      
       </Routes>
     </BrowserRouter>
   )

@@ -30,8 +30,14 @@ function Login() {
 
       localStorage.setItem('token', response.data.token)
       localStorage.setItem('username', response.data.username)
+      localStorage.setItem('role', response.data.role)
+      localStorage.setItem('userId', response.data.id)
 
-      navigate('/dashboard')
+      if (response.data.role === 'ADMIN') {
+        navigate('/admin')
+      } else {
+        navigate('/dashboard')
+      }
     } catch (error) {
       setMessage(
         error.response?.data?.message || 'Login failed. Check your details.'
@@ -129,4 +135,4 @@ function Login() {
   )
 }
 
-export default Login
+export default Login;

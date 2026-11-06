@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import DashboardSidebar from '../Components/DashboardSidebar'
 
 const serviceIcons = {
   'Flyers': '✦',
@@ -17,6 +18,7 @@ function Services() {
   const [services, setServices] = useState([])
   const [search, setSearch] = useState('')
   const [loading, setLoading] = useState(true)
+
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -39,73 +41,11 @@ function Services() {
   )
 
   return (
-    <div className="services-page">
+    <div className="dashboard-layout">
 
+      <DashboardSidebar />
 
-        <aside className="dashboard-sidebar">
-
-  <Link to="/dashboard" className="dashboard-logo">
-    MICORA<span>.</span>
-  </Link>
-
-  <p className="sidebar-label">MENU</p>
-
-  <nav className="sidebar-nav">
-
-    <Link to="/dashboard" className="sidebar-link">
-      <span>⌂</span>
-      Dashboard
-    </Link>
-
-    <Link to="/services" className="sidebar-link active">
-      <span>▦</span>
-      Browse Services
-    </Link>
-
-    <Link to="/track-order" className="sidebar-link">
-      <span>◷</span>
-      Track Orders
-    </Link>
-
-  </nav>
-
-  <div className="sidebar-bottom">
-
-    <div className="profile-section">
-      <div className="profile-avatar">
-        {(localStorage.getItem('username') || 'Customer')
-          .charAt(0)
-          .toUpperCase()}
-      </div>
-
-      <div className="profile-details">
-        <strong>
-          {localStorage.getItem('username') || 'Customer'}
-        </strong>
-        <small>My Profile</small>
-      </div>
-
-      <span>⋯</span>
-    </div>
-
-    <button
-      className="sidebar-logout"
-      onClick={() => {
-        localStorage.removeItem('token')
-        localStorage.removeItem('username')
-        window.location.href = '/login'
-      }}
-    >
-      ↪ Log out
-    </button>
-
-  </div>
-
-</aside>
-
-    
-
-      <main className="services-content">
+      <main className="dashboard-main services-content">
 
         <div className="services-heading">
           <span>EXPLORE MICORA</span>
@@ -131,6 +71,7 @@ function Services() {
             <span>OUR COLLECTION</span>
             <h2>What would you like to print?</h2>
           </div>
+
           <p>{filteredServices.length} services available</p>
         </div>
 
@@ -150,6 +91,7 @@ function Services() {
 
               return (
                 <div className="service-card" key={service.id}>
+
                   <div className="service-card-icon">
                     {serviceIcons[icon] || serviceIcons.default}
                   </div>
@@ -166,6 +108,7 @@ function Services() {
                   </p>
 
                   <div className="service-card-bottom">
+
                     {service.price != null && (
                       <span>
                         From ₦{Number(service.price).toLocaleString()}
@@ -181,6 +124,7 @@ function Services() {
                     >
                       Choose Service →
                     </button>
+
                   </div>
                 </div>
               )
@@ -193,4 +137,4 @@ function Services() {
   )
 }
 
-export default Services; 
+export default Services;

@@ -96,4 +96,4 @@ function EmailVerification() {
   )
 }
 
-export default EmailVerification
+export default EmailVerification;

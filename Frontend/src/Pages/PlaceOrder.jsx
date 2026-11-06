@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import api from '../services/api'
+import DashboardSidebar from '../Components/DashboardSidebar'
 
 function PlaceOrder() {
   const location = useLocation()
@@ -8,20 +9,24 @@ function PlaceOrder() {
   const service = location.state?.service
 
   const [quantity, setQuantity] = useState(1)
-  const [designFileUrl, setDesignFileUrl] = useState('')
+  const [designFile, setDesignFile] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-  const unitPrice = Number(service?.price || 0)
+  const unitPrice = Number(service?.basePrice || 0)
   const estimatedTotal = unitPrice * Number(quantity)
 
   if (!service) {
     return (
-      <div className="order-main">
-        <div className="order-card">
-          <h2>No service selected</h2>
-          <Link to="/services">Browse Services</Link>
-        </div>
+      <div className="dashboard-layout">
+        <DashboardSidebar />
+
+        <main className="dashboard-main order-main">
+          <div className="order-card">
+            <h2>No service selected</h2>
+            <Link to="/services">Browse Services</Link>
+          </div>
+        </main>
       </div>
     )
   }
@@ -31,7 +36,24 @@ function PlaceOrder() {
     setLoading(true)
     setError('')
 
+    if (!designFile) {
+      setError('Please upload your design.')
+      setLoading(false)
+      return
+    }
+
     try {
+      const formData = new FormData()
+      formData.append('file', designFile)
+
+      const uploadResponse = await api.post('/api/files', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data'
+        }
+      })
+
+      const designFileUrl = uploadResponse.data.url
+
       const response = await api.post('/api/orders', {
         serviceId: service.id,
         quantity: Number(quantity),
@@ -43,7 +65,8 @@ function PlaceOrder() {
       })
     } catch (error) {
       setError(
-        error.response?.data?.message || 'Could not place your order. Please try again.'
+        error.response?.data?.message ||
+        'Could not place your order. Please try again.'
       )
     } finally {
       setLoading(false)
@@ -52,43 +75,13 @@ function PlaceOrder() {
 
   return (
     <div className="dashboard-layout">
-      <aside className="dashboard-sidebar">
-        <Link to="/" className="dashboard-logo">MICORA.</Link>
 
-        <nav className="sidebar-nav">
-          <Link to="/" className="sidebar-link"><span>⌂</span>Home</Link>
-          <Link to="/dashboard" className="sidebar-link"><span>▦</span>Dashboard</Link>
-          <Link to="/services" className="sidebar-link"><span>◈</span>Browse Services</Link>
-          <Link to="/track-orders" className="sidebar-link"><span>◎</span>Track Orders</Link>
-        </nav>
-
-        <div className="sidebar-bottom">
-          <div className="profile-section">
-            <div className="profile-avatar">
-              {(localStorage.getItem('username') || 'U')[0].toUpperCase()}
-            </div>
-
-            <div className="profile-details">
-              <strong>{localStorage.getItem('username') || 'User'}</strong>
-              <span>Customer</span>
-            </div>
-          </div>
-
-          <button
-            className="sidebar-logout"
-            onClick={() => {
-              localStorage.removeItem('token')
-              localStorage.removeItem('username')
-              navigate('/')
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </aside>
+      <DashboardSidebar />
 
       <main className="dashboard-main order-main">
+
         <form className="order-card" onSubmit={handleOrder}>
+
           <div className="order-header">
             <span>NEW ORDER</span>
             <h1>Place your order</h1>
@@ -97,26 +90,35 @@ function PlaceOrder() {
 
           <div className="order-field">
             <label>Quantity</label>
+
             <input
               type="number"
               min="1"
               value={quantity}
-              onChange={(e) => setQuantity(Math.max(1, Number(e.target.value)))}
+              onChange={(e) =>
+                setQuantity(Math.max(1, Number(e.target.value)))
+              }
               required
             />
           </div>
 
           <div className="order-field">
-            <label>Design URL</label>
+            <label>Upload Design</label>
+
             <input
-              type="url"
-              placeholder="Paste your design link"
-              value={designFileUrl}
-              onChange={(e) => setDesignFileUrl(e.target.value)}
+              type="file"
+              accept=".png,.jpg,.jpeg,.pdf"
+              onChange={(e) => setDesignFile(e.target.files[0] || null)}
+              required
             />
+
+            {designFile && (
+              <small>{designFile.name}</small>
+            )}
           </div>
 
           <div className="order-summary">
+
             <div>
               <span>Service</span>
               <strong>{service.name}</strong>
@@ -136,6 +138,7 @@ function PlaceOrder() {
               <span>Estimated Total</span>
               <strong>₦{estimatedTotal.toLocaleString()}</strong>
             </div>
+
           </div>
 
           {error && <p className="order-error">{error}</p>}
@@ -147,7 +150,9 @@ function PlaceOrder() {
           >
             {loading ? 'Placing Order...' : 'Place Order'}
           </button>
+
         </form>
+
       </main>
     </div>
   )

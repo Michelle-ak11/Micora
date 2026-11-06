@@ -62,6 +62,11 @@ public CorsConfigurationSource corsConfigurationSource() {
     .requestMatchers(HttpMethod.GET, "/api/orders").hasRole("ADMIN")
     .requestMatchers(HttpMethod.GET, "/api/orders/customer/**").hasRole("ADMIN")
     .requestMatchers("/api/orders/**").authenticated()
+    .requestMatchers(HttpMethod.GET, "/api/files/*").permitAll()
+    .requestMatchers(HttpMethod.GET, "/api/invoices").hasRole("ADMIN")
+.requestMatchers("/api/invoices/**").authenticated()
+
+
     .anyRequest().authenticated()
 )
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);

@@ -1,28 +1,19 @@
 import { useState } from 'react'
-import { Link, useLocation, useNavigate } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import api from '../services/api'
+import DashboardSidebar from '../Components/DashboardSidebar'
 
 function Payment() {
   const location = useLocation()
-  const navigate = useNavigate()
   const order = location.state?.order
 
   const [loading, setLoading] = useState(false)
   const [payment, setPayment] = useState(null)
   const [error, setError] = useState('')
 
-  const amount = Number(order?.quotedPrice || order?.totalPrice || order?.price || 0)
-
-  if (!order) {
-    return (
-      <div className="payment-page">
-        <div className="payment-card">
-          <h2>No order found</h2>
-          <Link to="/services">Back to Services</Link>
-        </div>
-      </div>
-    )
-  }
+  const amount = Number(
+    order?.quotedPrice || order?.totalPrice || order?.price || 0
+  )
 
   const handlePayment = async () => {
     setLoading(true)
@@ -45,45 +36,29 @@ function Payment() {
     }
   }
 
+  if (!order) {
+    return (
+      <div className="dashboard-layout">
+        <DashboardSidebar />
+
+        <main className="dashboard-main payment-main">
+          <div className="payment-card">
+            <h2>No order found</h2>
+            <Link to="/services">Back to Services</Link>
+          </div>
+        </main>
+      </div>
+    )
+  }
+
   return (
     <div className="dashboard-layout">
-      <aside className="dashboard-sidebar">
-        <Link to="/" className="dashboard-logo">MICORA.</Link>
 
-        <nav className="sidebar-nav">
-          <Link to="/" className="sidebar-link"><span>⌂</span>Home</Link>
-          <Link to="/dashboard" className="sidebar-link"><span>▦</span>Dashboard</Link>
-          <Link to="/services" className="sidebar-link"><span>◈</span>Browse Services</Link>
-          <Link to="/track-orders" className="sidebar-link"><span>◎</span>Track Orders</Link>
-        </nav>
-
-        <div className="sidebar-bottom">
-          <div className="profile-section">
-            <div className="profile-avatar">
-              {(localStorage.getItem('username') || 'U')[0].toUpperCase()}
-            </div>
-
-            <div className="profile-details">
-              <strong>{localStorage.getItem('username') || 'User'}</strong>
-              <span>Customer</span>
-            </div>
-          </div>
-
-          <button
-            className="sidebar-logout"
-            onClick={() => {
-              localStorage.removeItem('token')
-              localStorage.removeItem('username')
-              navigate('/')
-            }}
-          >
-            Logout
-          </button>
-        </div>
-      </aside>
+      <DashboardSidebar />
 
       <main className="dashboard-main payment-main">
         <div className="payment-card">
+
           {!payment ? (
             <>
               <div className="payment-header">
@@ -94,7 +69,11 @@ function Payment() {
               <div className="payment-summary">
                 <div>
                   <span>Service</span>
-                  <strong>{order.service?.name || order.serviceName || 'Printing Service'}</strong>
+                  <strong>
+                    {order.service?.name ||
+                      order.serviceName ||
+                      'Printing Service'}
+                  </strong>
                 </div>
 
                 <div>
@@ -115,7 +94,11 @@ function Payment() {
                 onClick={handlePayment}
                 disabled={loading}
               >
-                {loading ? <span className="payment-loader"></span> : 'Pay Now'}
+                {loading ? (
+                  <span className="payment-loader"></span>
+                ) : (
+                  'Pay Now'
+                )}
               </button>
             </>
           ) : (
@@ -141,6 +124,7 @@ function Payment() {
               </Link>
             </div>
           )}
+
         </div>
       </main>
     </div>

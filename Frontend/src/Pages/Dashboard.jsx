@@ -9,6 +9,14 @@ function Dashboard() {
   const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
+  const [showAccountMenu, setShowAccountMenu] = useState(false)
+  const [showDeactivate, setShowDeactivate] = useState(false)
+  const [deactivateStep, setDeactivateStep] = useState('confirm')
+  const [password, setPassword] = useState('')
+  const [code, setCode] = useState('')
+  const [deactivateError, setDeactivateError] = useState('')
+  const [deactivateLoading, setDeactivateLoading] = useState(false)
+
   useEffect(() => {
     const fetchOrders = async () => {
       try {
@@ -44,6 +52,62 @@ function Dashboard() {
     navigate('/login')
   }
 
+  const openDeactivate = () => {
+    setShowAccountMenu(false)
+    setShowDeactivate(true)
+    setDeactivateStep('confirm')
+    setPassword('')
+    setCode('')
+    setDeactivateError('')
+  }
+
+  const sendCloseAccountCode = async () => {
+    try {
+      setDeactivateLoading(true)
+      setDeactivateError('')
+
+      await api.post('/api/users/me/close-account/send-code')
+
+      setDeactivateStep('code')
+    } catch (error) {
+      setDeactivateError(
+        error.response?.data?.message ||
+        'Could not send the verification code.'
+      )
+    } finally {
+      setDeactivateLoading(false)
+    }
+  }
+
+  const deactivateAccount = async () => {
+    try {
+      setDeactivateLoading(true)
+      setDeactivateError('')
+
+      const request = {}
+
+      if (deactivateStep === 'password') {
+        request.password = password
+      } else {
+        request.code = code
+      }
+
+      await api.patch('/api/users/me/deactivate', request)
+
+      localStorage.removeItem('token')
+      localStorage.removeItem('username')
+
+      navigate('/login')
+    } catch (error) {
+      setDeactivateError(
+        error.response?.data?.message ||
+        'Could not deactivate your account.'
+      )
+    } finally {
+      setDeactivateLoading(false)
+    }
+  }
+
   return (
     <div className="dashboard-layout">
 
@@ -57,10 +121,11 @@ function Dashboard() {
         <p className="sidebar-label">MENU</p>
 
         <nav className="sidebar-nav">
-            <Link to="/" className="sidebar-link">
-  <span>⌂</span>
-  Home
-</Link>
+
+          <Link to="/" className="sidebar-link">
+            <span>⌂</span>
+            Home
+          </Link>
 
           <Link to="/dashboard" className="sidebar-link active">
             <span>⌂</span>
@@ -82,6 +147,7 @@ function Dashboard() {
         <div className="sidebar-bottom">
 
           <div className="profile-section">
+
             <div className="profile-avatar">
               {username.charAt(0).toUpperCase()}
             </div>
@@ -91,7 +157,21 @@ function Dashboard() {
               <small>My Profile</small>
             </div>
 
-            <span>⋯</span>
+            <button
+              className="profile-menu-button"
+              onClick={() => setShowAccountMenu(!showAccountMenu)}
+            >
+              ⋯
+            </button>
+
+            {showAccountMenu && (
+              <div className="profile-menu">
+                <button onClick={openDeactivate}>
+                  Deactivate Account
+                </button>
+              </div>
+            )}
+
           </div>
 
           <button className="sidebar-logout" onClick={logout}>
@@ -271,6 +351,7 @@ function Dashboard() {
           <section className="quick-actions">
 
             <div className="section-heading">
+
               <div>
                 <span className="section-eyebrow">
                   GET STARTED
@@ -282,6 +363,7 @@ function Dashboard() {
               <Link to="/services">
                 View all →
               </Link>
+
             </div>
 
 
@@ -348,6 +430,7 @@ function Dashboard() {
             ) : orders.length === 0 ? (
 
               <div className="empty-orders">
+
                 <span>✧</span>
 
                 <h3>No orders yet</h3>
@@ -359,6 +442,7 @@ function Dashboard() {
                 <Link to="/services">
                   Browse Services
                 </Link>
+
               </div>
 
             ) : (
@@ -422,6 +506,7 @@ function Dashboard() {
         <section className="dashboard-cta">
 
           <div>
+
             <span className="section-eyebrow">
               LET'S GET CREATIVE
             </span>
@@ -433,6 +518,7 @@ function Dashboard() {
             <p>
               Discover our printing and branding services.
             </p>
+
           </div>
 
           <Link to="/services">
@@ -441,10 +527,162 @@ function Dashboard() {
 
         </section>
 
+
+        {/* DEACTIVATE ACCOUNT MODAL */}
+        {showDeactivate && (
+          <div className="deactivate-overlay">
+
+            <div className="deactivate-modal">
+
+              <button
+                className="deactivate-close"
+                onClick={() => setShowDeactivate(false)}
+              >
+                ×
+              </button>
+
+
+              {deactivateStep === 'confirm' && (
+                <>
+                  <span className="section-eyebrow">
+                    ACCOUNT SETTINGS
+                  </span>
+
+                  <h2>
+                    Deactivate your account?
+                  </h2>
+
+                  <p>
+                    Your account will be deactivated and you will be
+                    signed out.
+                  </p>
+
+                  <div className="deactivate-actions">
+
+                    <button
+                      className="cancel-deactivate"
+                      onClick={() => setShowDeactivate(false)}
+                    >
+                      Cancel
+                    </button>
+
+                    <button
+                      className="confirm-deactivate"
+                      onClick={() => setDeactivateStep('password')}
+                    >
+                      Continue
+                    </button>
+
+                  </div>
+                </>
+              )}
+
+
+              {deactivateStep === 'password' && (
+                <>
+                  <span className="section-eyebrow">
+                    CONFIRM ACCOUNT
+                  </span>
+
+                  <h2>
+                    Enter your password
+                  </h2>
+
+                  <p>
+                    Confirm your password to deactivate your account.
+                  </p>
+
+                  <input
+                    type="password"
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                  />
+
+                  {deactivateError && (
+                    <p className="deactivate-error">
+                      {deactivateError}
+                    </p>
+                  )}
+
+                  <button
+                    className="confirm-deactivate full"
+                    onClick={deactivateAccount}
+                    disabled={deactivateLoading || !password}
+                  >
+                    {deactivateLoading
+                      ? 'Deactivating...'
+                      : 'Deactivate Account'}
+                  </button>
+
+                  <button
+                    className="email-code-button"
+                    onClick={sendCloseAccountCode}
+                    disabled={deactivateLoading}
+                  >
+                    Use email verification instead
+                  </button>
+
+                </>
+              )}
+
+
+              {deactivateStep === 'code' && (
+                <>
+                  <span className="section-eyebrow">
+                    EMAIL VERIFICATION
+                  </span>
+
+                  <h2>
+                    Enter your code
+                  </h2>
+
+                  <p>
+                    We've sent a verification code to your email.
+                  </p>
+
+                  <input
+                    type="text"
+                    placeholder="Enter verification code"
+                    value={code}
+                    onChange={(e) => setCode(e.target.value)}
+                  />
+
+                  {deactivateError && (
+                    <p className="deactivate-error">
+                      {deactivateError}
+                    </p>
+                  )}
+
+                  <button
+                    className="confirm-deactivate full"
+                    onClick={deactivateAccount}
+                    disabled={deactivateLoading || !code}
+                  >
+                    {deactivateLoading
+                      ? 'Deactivating...'
+                      : 'Deactivate Account'}
+                  </button>
+
+                  <button
+                    className="email-code-button"
+                    onClick={() => setDeactivateStep('password')}
+                  >
+                    Use password instead
+                  </button>
+
+                </>
+              )}
+
+            </div>
+
+          </div>
+        )}
+
       </main>
 
     </div>
   )
 }
 
-export default Dashboard
+export default Dashboard;
